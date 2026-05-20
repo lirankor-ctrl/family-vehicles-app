@@ -1,21 +1,37 @@
 import { useNavigate } from 'react-router-dom';
 import { useVehicleStore } from '../store/VehicleContext';
 import { useNotifications } from '../store/NotificationContext';
+import { useChecklistStore } from '../store/ChecklistContext';
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const { activeVehicles, archivedVehicles } = useVehicleStore();
   const { activeAlerts } = useNotifications();
+  const { checklists } = useChecklistStore();
 
   const alertCount     = activeAlerts.length;
   const activeCount    = activeVehicles.length;
   const archivedCount  = archivedVehicles.length;
+  const checklistCount = checklists.length;
 
   // treatments page only shows active vehicles → mirror that count here
   const treatmentCount = activeVehicles.reduce(
     (n, v) => n + v.notes.filter(note => note.type === 'treatment').length,
     0,
   );
+
+  // open-items summary across all checklists
+  const checklistOpenCount = checklists.reduce(
+    (n, c) => n + c.items.filter(it => !it.completed).length,
+    0,
+  );
+
+  const checklistsSubtitle =
+    checklistCount === 0
+      ? 'נהלו רשימות אישיות לרכב, ביטוח, נסיעות ועוד'
+      : checklistOpenCount === 0
+        ? `${checklistCount} צ'ק ליסטים · הכל הושלם 🎉`
+        : `${checklistCount} צ'ק ליסטים · ${checklistOpenCount} פריטים פתוחים`;
 
   const renewalsSubtitle =
     activeCount === 0
@@ -69,6 +85,19 @@ export default function LandingPage() {
           <div className="landing-card-body">
             <span className="landing-card-title">טיפולים</span>
             <span className="landing-card-subtitle">{treatmentsSubtitle}</span>
+          </div>
+          <span className="landing-card-arrow" aria-hidden="true">‹</span>
+        </button>
+
+        <button
+          className="landing-card"
+          onClick={() => navigate('/checklists')}
+          aria-label="צ'ק ליסט"
+        >
+          <span className="landing-card-icon" aria-hidden="true">📋</span>
+          <div className="landing-card-body">
+            <span className="landing-card-title">צ'ק ליסט</span>
+            <span className="landing-card-subtitle">{checklistsSubtitle}</span>
           </div>
           <span className="landing-card-arrow" aria-hidden="true">‹</span>
         </button>

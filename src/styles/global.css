@@ -203,8 +203,10 @@ button, a, [role="button"], input, textarea, select, label {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 8px 20px;
-  min-width: 64px;
+  /* tightened horizontal padding so 5 buttons fit on narrow phones (≥320px) */
+  padding: 8px 8px;
+  flex: 1 1 0;
+  min-width: 56px;
   min-height: 44px;
   color: rgba(167, 139, 250, 0.55);
   transition: color 0.2s;
@@ -1228,6 +1230,323 @@ button, a, [role="button"], input, textarea, select, label {
    toward inline-end/left when turned on). */
 .switch.off .switch-thumb { inset-inline-start: 3px;  }
 .switch.on  .switch-thumb { inset-inline-start: 23px; }
+
+/* ─── Checklists ─── */
+
+/* dashboard action row */
+.checklist-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.checklist-actions .btn { flex: 1; }
+
+/* dashboard card */
+.checklist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checklist-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-sm);
+  border-inline-start: 4px solid var(--purple-300);
+}
+
+.checklist-card-main {
+  cursor: pointer;
+}
+
+.checklist-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.checklist-card-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.checklist-card-pct {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--purple-500);
+  flex-shrink: 0;
+}
+
+.checklist-card-desc {
+  font-size: 0.84rem;
+  color: var(--gray-500);
+  line-height: 1.45;
+  margin-bottom: 10px;
+}
+
+.checklist-card-meta {
+  font-size: 0.76rem;
+  color: var(--gray-400);
+  margin-top: 6px;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.checklist-card-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--gray-100);
+}
+
+.checklist-inline-confirm {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--gray-100);
+  font-size: 0.86rem;
+  color: var(--gray-700);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checklist-inline-confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* progress bar (used on dashboard cards AND inside the detail header) */
+.checklist-progress {
+  width: 100%;
+  height: 8px;
+  background: var(--gray-100);
+  border-radius: 100px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.checklist-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple-400), var(--purple-300));
+  border-radius: 100px;
+  transition: width 0.3s ease;
+}
+
+.checklist-progress-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.checklist-progress-text {
+  font-size: 0.86rem;
+  color: var(--gray-600);
+  font-weight: 600;
+}
+
+.checklist-progress-pct {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--purple-500);
+}
+
+.checklist-description {
+  font-size: 0.92rem;
+  color: var(--gray-600);
+  line-height: 1.55;
+  margin-bottom: 14px;
+}
+
+/* item rows on the detail page */
+.item-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  transition: background 0.18s;
+}
+
+.item-row.item-completed { background: var(--purple-50); border-color: var(--purple-100); }
+
+.item-row.item-row-editing {
+  display: block;          /* edit-mode lays form fields vertically */
+  background: var(--white);
+}
+
+/* custom checkbox — visually larger and brand-coloured */
+.item-check {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.item-check input[type="checkbox"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.item-check-box {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--gray-300);
+  border-radius: 7px;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  font-size: 0.95rem;
+  font-weight: 700;
+  transition: all 0.18s;
+}
+
+.item-check input[type="checkbox"]:checked ~ .item-check-box {
+  background: var(--purple-400);
+  border-color: var(--purple-400);
+}
+
+.item-check input[type="checkbox"]:focus-visible ~ .item-check-box {
+  outline: 2px solid var(--purple-300);
+  outline-offset: 2px;
+}
+
+.item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-title {
+  font-size: 0.95rem;
+  color: var(--gray-900);
+  font-weight: 600;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.item-completed .item-title {
+  text-decoration: line-through;
+  color: var(--gray-500);
+}
+
+.item-notes {
+  font-size: 0.82rem;
+  color: var(--gray-500);
+  line-height: 1.5;
+  margin-top: 4px;
+  word-break: break-word;
+}
+
+.item-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* import help text + preview table */
+.import-help {
+  font-size: 0.9rem;
+  color: var(--gray-600);
+  line-height: 1.55;
+}
+
+.import-help-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--gray-600);
+}
+
+.import-help-list li {
+  padding: 8px 12px;
+  background: var(--gray-50);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--gray-100);
+}
+
+.import-help-list strong { color: var(--purple-500); }
+
+.preview-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-sm);
+}
+
+.preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  direction: rtl;
+}
+
+.preview-table th,
+.preview-table td {
+  padding: 8px 10px;
+  text-align: right;
+  border-bottom: 1px solid var(--gray-100);
+  color: var(--gray-700);
+  vertical-align: top;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-table th {
+  background: var(--gray-50);
+  color: var(--purple-500);
+  font-weight: 700;
+  font-size: 0.76rem;
+  position: sticky;
+  top: 0;
+}
+
+.preview-table tr:last-child td { border-bottom: none; }
+
+.preview-header-row td {
+  background: var(--purple-50);
+  color: var(--purple-500);
+  font-weight: 700;
+  font-style: italic;
+}
+
+.preview-truncated {
+  font-size: 0.78rem;
+  color: var(--gray-400);
+  text-align: center;
+  padding: 10px;
+  background: var(--gray-50);
+  border-top: 1px solid var(--gray-100);
+}
 
 /* ─── Responsive ─── */
 @media (min-width: 601px) {

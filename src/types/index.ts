@@ -18,6 +18,24 @@ export interface VehicleDocument {
   uploadedAt: string;
 }
 
+export interface ChecklistItem {
+  id: string;
+  title: string;
+  notes?: string;
+  completed: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Checklist {
+  id: string;
+  name: string;
+  description?: string;
+  items: ChecklistItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Vehicle {
   id: string;
   driverName: string;

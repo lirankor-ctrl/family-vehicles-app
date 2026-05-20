@@ -14,8 +14,9 @@ export default function Navigation() {
   const alertCount = activeAlerts.length;
 
   // /vehicle/:id detail counts as "in renewals context"
-  const isRenewals   = pathname === '/renewals' || pathname.startsWith('/vehicle/');
+  const isRenewals   = pathname === '/renewals'  || pathname.startsWith('/vehicle/');
   const isTreatments = pathname === '/treatments';
+  const isChecklists = pathname.startsWith('/checklists');
   const isAlerts     = pathname === '/alerts';
 
   return (
@@ -45,6 +46,15 @@ export default function Navigation() {
       >
         <span className="nav-icon">🔧</span>
         <span className="nav-label">טיפולים</span>
+      </button>
+
+      <button
+        className={`nav-btn ${isChecklists ? 'active' : ''}`}
+        onClick={() => navigate('/checklists')}
+        aria-label="צ'ק ליסט"
+      >
+        <span className="nav-icon">📋</span>
+        <span className="nav-label">צ'ק ליסט</span>
       </button>
 
       <button

@@ -16,6 +16,7 @@ export default function VehicleDetailPage() {
   const [showNoteForm,   setShowNoteForm]   = useState(false);
   const [noteType,       setNoteType]       = useState<'treatment' | 'general'>('treatment');
   const [noteDate,       setNoteDate]       = useState(todayISO);
+  const [noteTitle,      setNoteTitle]      = useState('');
   const [noteText,       setNoteText]       = useState('');
   const [confirmDelete,  setConfirmDelete]  = useState(false);
 
@@ -26,19 +27,28 @@ export default function VehicleDetailPage() {
     return (
       <div className="content" style={{ paddingTop: 48, textAlign: 'center' }}>
         <p style={{ color: 'var(--purple-200)', marginBottom: 20 }}>הרכב לא נמצא</p>
-        <button className="btn btn-secondary" onClick={() => navigate('/')}>חזרה לבית</button>
+        <button className="btn btn-secondary" onClick={() => navigate('/renewals')}>חזרה לרשימה</button>
       </div>
     );
   }
 
   const handleConfirmedDelete = () => {
     deleteVehicle(vehicle.id);
-    navigate('/');
+    navigate('/renewals');
   };
 
   const handleAddNote = () => {
     if (!noteText.trim()) return;
-    addNote(vehicle.id, { date: noteDate, description: noteText.trim(), type: noteType });
+    const trimmedTitle = noteTitle.trim();
+    addNote(vehicle.id, {
+      date:        noteDate,
+      description: noteText.trim(),
+      type:        noteType,
+      // only persist a title for treatments AND when it's non-empty,
+      // so general notes and old data shape stay the same
+      ...(noteType === 'treatment' && trimmedTitle ? { title: trimmedTitle } : {}),
+    });
+    setNoteTitle('');
     setNoteText('');
     setNoteDate(todayISO());
     setShowNoteForm(false);
@@ -71,7 +81,7 @@ export default function VehicleDetailPage() {
       <div className="topbar">
         <div className="topbar-start">
           {/* RTL: → points toward start (right side) = "go back" */}
-          <button className="back-btn" onClick={() => navigate('/')} aria-label="חזרה לרשימה">→</button>
+          <button className="back-btn" onClick={() => navigate('/renewals')} aria-label="חזרה לרשימה">→</button>
           <span className="topbar-title">{vehicle.driverName}</span>
         </div>
         <div className="topbar-end">
@@ -187,7 +197,11 @@ export default function VehicleDetailPage() {
             <div className="section-title" style={{ margin: 0 }}>📝 טיפולים ורשומות</div>
             <button
               className="btn btn-primary btn-sm"
-              onClick={() => { setShowNoteForm(f => !f); setNoteText(''); }}
+              onClick={() => {
+                setShowNoteForm(f => !f);
+                setNoteText('');
+                setNoteTitle('');
+              }}
             >
               {showNoteForm ? 'ביטול' : '+ הוסף'}
             </button>
@@ -210,6 +224,20 @@ export default function VehicleDetailPage() {
                 </button>
               </div>
 
+              {noteType === 'treatment' && (
+                <div className="form-group">
+                  <label className="form-label" htmlFor="noteTitle">כותרת הטיפול</label>
+                  <input
+                    id="noteTitle"
+                    className="form-input"
+                    type="text"
+                    value={noteTitle}
+                    onChange={e => setNoteTitle(e.target.value)}
+                    placeholder="לדוגמה: טיפול 10,000 ק&quot;מ, החלפת בלמים..."
+                  />
+                </div>
+              )}
+
               <div className="form-group">
                 <label className="form-label">תאריך</label>
                 <input
@@ -221,12 +249,16 @@ export default function VehicleDetailPage() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">תיאור</label>
+                <label className="form-label">
+                  {noteType === 'treatment' ? 'תיאור ופרטים' : 'תיאור'}
+                </label>
                 <textarea
                   className="form-textarea"
                   value={noteText}
                   onChange={e => setNoteText(e.target.value)}
-                  placeholder="תאר את הטיפול או ההערה..."
+                  placeholder={noteType === 'treatment'
+                    ? 'פרטים נוספים — היכן בוצע, חלקים שהוחלפו...'
+                    : 'תאר את ההערה...'}
                   rows={3}
                   autoFocus
                 />
@@ -357,6 +389,7 @@ function DocSlot({
 }
 
 function NoteItem({ note, onDelete }: { note: Note; onDelete: () => void }) {
+  const title = note.title?.trim();
   return (
     <div className="note-item">
       <div className="note-meta">
@@ -365,7 +398,8 @@ function NoteItem({ note, onDelete }: { note: Note; onDelete: () => void }) {
           {note.type === 'treatment' ? '🔧 טיפול' : '📝 הערה'}
         </span>
       </div>
-      <div className="note-text">{note.description}</div>
+      {title && <div className="note-title">{title}</div>}
+      {note.description && <div className="note-text">{note.description}</div>}
       <button
         className="note-del-btn"
         onClick={onDelete}

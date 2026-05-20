@@ -13,6 +13,8 @@ export default function HomePage() {
     <>
       <div className="topbar">
         <div className="topbar-start">
+          {/* RTL: → points toward start (right side) = "back to landing" */}
+          <button className="back-btn" onClick={() => navigate('/')} aria-label="חזרה למסך פתיחה">→</button>
           <span className="topbar-title">🚗 רכבי המשפחה</span>
           {count > 0 && (
             <span className="topbar-subtitle">{count} רכבים</span>
@@ -25,7 +27,7 @@ export default function HomePage() {
           <div className="empty-state">
             <div className="empty-icon">🚗</div>
             <h2>אין רכבים עדיין</h2>
-            <p>לחץ על כפתור + למטה כדי להוסיף את הרכב הראשון של המשפחה</p>
+            <p>לחצו על כפתור + למטה כדי להוסיף את הרכב הראשון של המשפחה</p>
           </div>
         ) : (
           vehicles.map(v => {
@@ -88,6 +90,14 @@ export default function HomePage() {
           })
         )}
       </div>
+
+      <button
+        className="fab fab-floating"
+        onClick={() => navigate('/vehicle/new')}
+        aria-label="הוסף רכב חדש"
+      >
+        +
+      </button>
     </>
   );
 }

@@ -5,6 +5,8 @@ export interface Note {
   date: string;
   description: string;
   type: NoteType;
+  /** Optional treatment title — added in v1.1; old persisted notes have it undefined. */
+  title?: string;
 }
 
 export interface VehicleDocument {

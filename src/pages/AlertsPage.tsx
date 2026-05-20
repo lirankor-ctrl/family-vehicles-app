@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVehicleStore } from '../store/VehicleContext';
-import { formatDate, getDaysUntil, getExpiryStatus } from '../utils/dateUtils';
+import { useNotifications } from '../store/NotificationContext';
+import { formatDate, getExpiryStatus } from '../utils/dateUtils';
 
 interface AlertEntry {
   vehicleId: string;
@@ -13,23 +15,26 @@ interface AlertEntry {
 export default function AlertsPage() {
   const navigate = useNavigate();
   const { vehicles } = useVehicleStore();
+  const { activeAlerts, enabled, setEnabled, markAllSeen } = useNotifications();
 
-  const alerts: AlertEntry[] = [];
+  // visiting this page = acknowledging every currently-active alert
+  useEffect(() => {
+    markAllSeen();
+  }, [markAllSeen]);
 
-  for (const v of vehicles) {
-    if (v.licenseExpiryDate) {
-      const days = getDaysUntil(v.licenseExpiryDate);
-      if (days !== null && days <= 30) {
-        alerts.push({ vehicleId: v.id, driverName: v.driverName, docType: 'license', expiryDate: v.licenseExpiryDate, days });
-      }
-    }
-    if (v.insuranceExpiryDate) {
-      const days = getDaysUntil(v.insuranceExpiryDate);
-      if (days !== null && days <= 30) {
-        alerts.push({ vehicleId: v.id, driverName: v.driverName, docType: 'insurance', expiryDate: v.insuranceExpiryDate, days });
-      }
-    }
-  }
+  // join active-alert items with their vehicle for display
+  const vehicleById = new Map(vehicles.map(v => [v.id, v]));
+  const alerts: AlertEntry[] = activeAlerts.flatMap(a => {
+    const v = vehicleById.get(a.vehicleId);
+    if (!v) return [];
+    return [{
+      vehicleId:  a.vehicleId,
+      driverName: v.driverName,
+      docType:    a.docType,
+      expiryDate: a.expiryDate,
+      days:       a.days,
+    }];
+  });
 
   // most urgent first (expired items have negative days → they come first)
   alerts.sort((a, b) => a.days - b.days);
@@ -45,6 +50,22 @@ export default function AlertsPage() {
       </div>
 
       <div className="content">
+        <div className="settings-row">
+          <label className="settings-label" htmlFor="notify-toggle">
+            <span className="settings-icon" aria-hidden="true">🔔</span>
+            <span>הפעל התראות</span>
+          </label>
+          <button
+            id="notify-toggle"
+            role="switch"
+            aria-checked={enabled}
+            aria-label="הפעל התראות"
+            className={`switch ${enabled ? 'on' : 'off'}`}
+            onClick={() => setEnabled(!enabled)}
+          >
+            <span className="switch-thumb" aria-hidden="true" />
+          </button>
+        </div>
         {alerts.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">{noVehicles ? '🚗' : '✅'}</div>

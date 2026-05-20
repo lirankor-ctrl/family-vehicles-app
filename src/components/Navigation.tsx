@@ -1,45 +1,50 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useVehicleStore } from '../store/VehicleContext';
-import { getExpiryStatus } from '../utils/dateUtils';
+import { useNotifications } from '../store/NotificationContext';
 
 export default function Navigation() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { vehicles } = useVehicleStore();
+  const { activeAlerts } = useNotifications();
 
-  // hide nav entirely on form screens
-  const isForm = pathname === '/vehicle/new' || pathname.endsWith('/edit');
-  if (isForm) return null;
+  // hide nav on: landing page and form screens
+  const isLanding = pathname === '/';
+  const isForm    = pathname === '/vehicle/new' || pathname.endsWith('/edit');
+  if (isLanding || isForm) return null;
 
-  // count vehicles with ANY expiry within 30 days or already expired
-  const alertCount = vehicles.reduce((n, v) => {
-    const ls = getExpiryStatus(v.licenseExpiryDate);
-    const is = getExpiryStatus(v.insuranceExpiryDate);
-    const hasAlert = (s: ReturnType<typeof getExpiryStatus>) =>
-      s === 'expired' || s === 'urgent' || s === 'soon';
-    return n + (hasAlert(ls) || hasAlert(is) ? 1 : 0);
-  }, 0);
+  const alertCount = activeAlerts.length;
 
-  const isHome   = pathname === '/';
-  const isAlerts = pathname === '/alerts';
+  // /vehicle/:id detail counts as "in renewals context"
+  const isRenewals   = pathname === '/renewals' || pathname.startsWith('/vehicle/');
+  const isTreatments = pathname === '/treatments';
+  const isAlerts     = pathname === '/alerts';
 
   return (
     <nav className="bottom-nav">
       <button
-        className={`nav-btn ${isHome ? 'active' : ''}`}
+        className="nav-btn"
         onClick={() => navigate('/')}
-        aria-label="מסך בית"
+        aria-label="מסך פתיחה"
       >
         <span className="nav-icon">🏠</span>
         <span className="nav-label">בית</span>
       </button>
 
       <button
-        className="fab"
-        onClick={() => navigate('/vehicle/new')}
-        aria-label="הוסף רכב חדש"
+        className={`nav-btn ${isRenewals ? 'active' : ''}`}
+        onClick={() => navigate('/renewals')}
+        aria-label="חידושי ביטוח ורישיון"
       >
-        +
+        <span className="nav-icon">🚗</span>
+        <span className="nav-label">חידושים</span>
+      </button>
+
+      <button
+        className={`nav-btn ${isTreatments ? 'active' : ''}`}
+        onClick={() => navigate('/treatments')}
+        aria-label="טיפולים"
+      >
+        <span className="nav-icon">🔧</span>
+        <span className="nav-label">טיפולים</span>
       </button>
 
       <button
@@ -49,7 +54,11 @@ export default function Navigation() {
       >
         <span className="nav-icon">
           🔔
-          {alertCount > 0 && <span className="badge-dot" aria-hidden="true" />}
+          {alertCount > 0 && (
+            <span className="nav-count" aria-hidden="true">
+              {alertCount > 99 ? '99+' : alertCount}
+            </span>
+          )}
         </span>
         <span className="nav-label">התראות</span>
       </button>

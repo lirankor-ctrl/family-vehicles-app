@@ -82,7 +82,7 @@ export default function VehicleDetailPage() {
         <div className="topbar-start">
           {/* RTL: → points toward start (right side) = "go back" */}
           <button className="back-btn" onClick={() => navigate('/renewals')} aria-label="חזרה לרשימה">→</button>
-          <img src="/logo.png" alt="" className="topbar-logo" aria-hidden="true" />
+          <img src="/app-logo.png" alt="" className="topbar-logo" aria-hidden="true" />
           <span className="topbar-title">{vehicle.driverName}</span>
         </div>
         <div className="topbar-end">

@@ -15,7 +15,7 @@ export default function HomePage() {
         <div className="topbar-start">
           {/* RTL: → points toward start (right side) = "back to landing" */}
           <button className="back-btn" onClick={() => navigate('/')} aria-label="חזרה למסך פתיחה">→</button>
-          <img src="/logo.png" alt="" className="topbar-logo" aria-hidden="true" />
+          <img src="/app-logo.png" alt="" className="topbar-logo" aria-hidden="true" />
           <span className="topbar-title">🚗 רכבי המשפחה</span>
           {count > 0 && (
             <span className="topbar-subtitle">{count} רכבים</span>

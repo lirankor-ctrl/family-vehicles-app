@@ -62,7 +62,7 @@ export default function TreatmentsPage() {
         <div className="topbar-start">
           {/* RTL: → points toward start (right) = "back to landing" */}
           <button className="back-btn" onClick={() => navigate('/')} aria-label="חזרה למסך פתיחה">→</button>
-          <img src="/logo.png" alt="" className="topbar-logo" aria-hidden="true" />
+          <img src="/app-logo.png" alt="" className="topbar-logo" aria-hidden="true" />
           <span className="topbar-title">🔧 טיפולים</span>
           {all.length > 0 && (
             <span className="topbar-subtitle">{all.length} סה״כ</span>

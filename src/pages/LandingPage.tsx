@@ -32,11 +32,9 @@ export default function LandingPage() {
     <div className="content landing-content">
       <div className="landing-hero">
         <img
-          src="/logo.png"
+          src="/app-logo.png"
           alt="קצין רכב"
           className="landing-logo"
-          width={220}
-          height={140}
         />
         <h1 className="landing-title">קצין רכב</h1>
         <p className="landing-tagline">ניהול חכם של רכבי המשפחה</p>

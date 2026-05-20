@@ -45,7 +45,7 @@ export default function AlertsPage() {
     <>
       <div className="topbar">
         <div className="topbar-start">
-          <img src="/logo.png" alt="" className="topbar-logo" aria-hidden="true" />
+          <img src="/app-logo.png" alt="" className="topbar-logo" aria-hidden="true" />
           <span className="topbar-title">🔔 התראות</span>
         </div>
       </div>

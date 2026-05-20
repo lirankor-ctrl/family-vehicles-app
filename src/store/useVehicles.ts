@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Vehicle, Note, VehicleDocument } from '../types';
 
 const STORAGE_KEY = 'family_vehicles_v1';
@@ -58,6 +58,30 @@ export function useVehicles() {
     setVehicles(prev => prev.filter(v => v.id !== id));
   }, []);
 
+  /** Move to archive — flips `archived` flag and stamps `archivedAt`.
+   *  Does NOT delete anything: notes, documents, dates all remain. */
+  const archiveVehicle = useCallback((id: string) => {
+    const now = new Date().toISOString();
+    setVehicles(prev =>
+      prev.map(v =>
+        v.id === id ? { ...v, archived: true, archivedAt: now, updatedAt: now } : v,
+      ),
+    );
+  }, []);
+
+  /** Restore from archive — flips `archived` off and drops `archivedAt`
+   *  (object spread + explicit delete keeps the persisted blob tidy). */
+  const restoreVehicle = useCallback((id: string) => {
+    const now = new Date().toISOString();
+    setVehicles(prev =>
+      prev.map(v => {
+        if (v.id !== id) return v;
+        const { archivedAt: _drop, ...rest } = v;
+        return { ...rest, archived: false, updatedAt: now };
+      }),
+    );
+  }, []);
+
   const addNote = useCallback((vehicleId: string, note: Omit<Note, 'id'>) => {
     const newNote: Note = { ...note, id: crypto.randomUUID() };
     setVehicles(prev =>
@@ -112,11 +136,20 @@ export function useVehicles() {
     [vehicles],
   );
 
+  // Memoized partitions — the canonical "is active" check is `!v.archived`
+  // (treats missing field as active for backward compatibility with old data).
+  const activeVehicles   = useMemo(() => vehicles.filter(v => !v.archived), [vehicles]);
+  const archivedVehicles = useMemo(() => vehicles.filter(v =>  v.archived), [vehicles]);
+
   return {
-    vehicles,
+    vehicles,            // full list (active + archived)
+    activeVehicles,
+    archivedVehicles,
     addVehicle,
     updateVehicle,
-    deleteVehicle,
+    deleteVehicle,       // permanent delete
+    archiveVehicle,
+    restoreVehicle,
     addNote,
     deleteNote,
     addDocument,

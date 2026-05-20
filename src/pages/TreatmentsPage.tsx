@@ -16,7 +16,9 @@ interface TreatmentEntry {
 
 export default function TreatmentsPage() {
   const navigate = useNavigate();
-  const { vehicles } = useVehicleStore();
+  // archived vehicles are intentionally excluded — their treatments stay on
+  // the vehicle but don't show up in the aggregated view.
+  const { activeVehicles: vehicles } = useVehicleStore();
   const [query, setQuery] = useState('');
 
   // flatten all treatment notes, newest first

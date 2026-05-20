@@ -680,15 +680,18 @@ button, a, [role="button"], input, textarea, select, label {
 
 /* ─── Delete confirmation (replaces window.confirm) ─── */
 .delete-confirm-box {
-  background: var(--red-50);
-  border: 2px solid var(--red-100);
-  border-radius: var(--radius-sm);
+  /* neutral card — the choose step isn't destructive, only the permanent
+     confirm is. The danger color comes from the button inside, not the box. */
+  background: var(--white);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius);
   padding: 18px;
   text-align: center;
+  box-shadow: var(--shadow-sm);
 }
 
 .delete-confirm-text {
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   color: var(--gray-700);
   line-height: 1.55;
   margin-bottom: 16px;
@@ -697,6 +700,89 @@ button, a, [role="button"], input, textarea, select, label {
 .delete-confirm-text strong { color: var(--gray-900); }
 
 .delete-confirm-actions { display: flex; gap: 10px; }
+
+/* 3-option vertical action stack used by the initial choose dialog */
+.choose-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.choose-actions .btn { width: 100%; }
+
+/* Two-button row used at the bottom of an archived vehicle's detail page */
+.action-row {
+  display: flex;
+  gap: 10px;
+}
+
+/* ─── Archived banner (top of an archived vehicle's detail page) ─── */
+.archived-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.archived-banner-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.archived-banner-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.archived-banner-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 2px;
+}
+
+.archived-banner-subtitle {
+  font-size: 0.78rem;
+  color: var(--purple-200);
+}
+
+/* Read-only placeholder where the upload zone would be on an active vehicle */
+.doc-empty-readonly {
+  padding: 12px;
+  background: var(--gray-50);
+  border: 1px dashed var(--gray-200);
+  border-radius: var(--radius-sm);
+  color: var(--gray-400);
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+/* ─── Archive page card variant ─── */
+.archived-card {
+  /* same shape as vehicle-card but slightly desaturated to read as "inactive" */
+  opacity: 0.92;
+  border-inline-start: 4px solid var(--purple-200);
+}
+
+.archived-card:hover { opacity: 1; }
+
+.archived-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--purple-50);
+  color: var(--purple-500);
+  border: 1px solid var(--purple-100);
+  border-radius: 100px;
+  padding: 3px 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
 
 /* ─── Alerts page ─── */
 .alerts-summary {
@@ -883,6 +969,23 @@ button, a, [role="button"], input, textarea, select, label {
   font-size: 1.7rem;
   font-weight: 700;
   line-height: 1;
+}
+
+/* secondary landing card — same structure, lower visual weight (smaller
+   icon tile, more subtle background) so primary CTAs read first */
+.landing-card-secondary {
+  padding: 14px 16px;
+  min-height: 70px;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.landing-card-icon-secondary {
+  width: 40px;
+  height: 40px;
+  font-size: 1.25rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--purple-200), var(--purple-100));
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.22);
 }
 
 /* ─── Floating FAB (used on the renewals/HomePage) ─── */

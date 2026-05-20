@@ -9,6 +9,7 @@ import TreatmentsPage from './pages/TreatmentsPage';
 import VehicleFormPage from './pages/VehicleFormPage';
 import VehicleDetailPage from './pages/VehicleDetailPage';
 import AlertsPage from './pages/AlertsPage';
+import ArchivePage from './pages/ArchivePage';
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
               <Route path="/vehicle/:id/edit"     element={<VehicleFormPage />} />
               <Route path="/vehicle/:id"          element={<VehicleDetailPage />} />
               <Route path="/alerts"               element={<AlertsPage />} />
+              <Route path="/archive"              element={<ArchivePage />} />
               {/* anything unknown → landing (keeps old bookmarks alive) */}
               <Route path="*"                     element={<Navigate to="/" replace />} />
             </Routes>

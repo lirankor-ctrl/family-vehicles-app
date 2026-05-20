@@ -5,9 +5,10 @@ import StatusBadge from '../components/StatusBadge';
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { vehicles } = useVehicleStore();
+  const { activeVehicles, archivedVehicles } = useVehicleStore();
 
-  const count = vehicles.length;
+  const count          = activeVehicles.length;
+  const archivedCount  = archivedVehicles.length;
 
   return (
     <>
@@ -27,11 +28,15 @@ export default function HomePage() {
         {count === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">🚗</div>
-            <h2>אין רכבים עדיין</h2>
-            <p>לחצו על כפתור + למטה כדי להוסיף את הרכב הראשון של המשפחה</p>
+            <h2>{archivedCount > 0 ? 'אין רכבים פעילים' : 'אין רכבים עדיין'}</h2>
+            <p>
+              {archivedCount > 0
+                ? 'כל הרכבים שלכם נמצאים בארכיון. אפשר לשחזר אותם או להוסיף רכב חדש.'
+                : 'לחצו על כפתור + למטה כדי להוסיף את הרכב הראשון של המשפחה'}
+            </p>
           </div>
         ) : (
-          vehicles.map(v => {
+          activeVehicles.map(v => {
             const ls = getExpiryStatus(v.licenseExpiryDate);
             const is = getExpiryStatus(v.insuranceExpiryDate);
             const worstStatus =

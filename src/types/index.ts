@@ -29,4 +29,9 @@ export interface Vehicle {
   documents: VehicleDocument[];
   createdAt: string;
   updatedAt: string;
+  /** Archive flag — added in v1.2; missing on old persisted vehicles
+   *  → treat as active (`!v.archived` is the canonical "is active" check). */
+  archived?: boolean;
+  /** ISO date when the vehicle was archived. Cleared on restore. */
+  archivedAt?: string;
 }

@@ -92,6 +92,9 @@ export function buildAlertId(
 export function getActiveAlerts(vehicles: Vehicle[]): ActiveAlert[] {
   const out: ActiveAlert[] = [];
   for (const v of vehicles) {
+    // Archived vehicles never generate alerts. Defensive — even if a caller
+    // passes the full vehicle list, this guarantees correctness.
+    if (v.archived) continue;
     if (v.licenseExpiryDate) {
       const days = getDaysUntil(v.licenseExpiryDate);
       if (days !== null && days <= 30) {

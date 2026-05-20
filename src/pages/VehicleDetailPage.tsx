@@ -5,20 +5,30 @@ import { formatDate, getExpiryStatus, todayISO } from '../utils/dateUtils';
 import StatusBadge from '../components/StatusBadge';
 import { Note, VehicleDocument } from '../types';
 
+type DeleteState = 'idle' | 'choose' | 'permanent';
+
 export default function VehicleDetailPage() {
   const navigate = useNavigate();
   const { id }   = useParams<{ id: string }>();
-  const { getVehicle, deleteVehicle, addNote, deleteNote, addDocument, deleteDocument } =
-    useVehicleStore();
+  const {
+    getVehicle,
+    deleteVehicle,
+    archiveVehicle,
+    restoreVehicle,
+    addNote,
+    deleteNote,
+    addDocument,
+    deleteDocument,
+  } = useVehicleStore();
 
   const vehicle = id ? getVehicle(id) : undefined;
 
-  const [showNoteForm,   setShowNoteForm]   = useState(false);
-  const [noteType,       setNoteType]       = useState<'treatment' | 'general'>('treatment');
-  const [noteDate,       setNoteDate]       = useState(todayISO);
-  const [noteTitle,      setNoteTitle]      = useState('');
-  const [noteText,       setNoteText]       = useState('');
-  const [confirmDelete,  setConfirmDelete]  = useState(false);
+  const [showNoteForm, setShowNoteForm] = useState(false);
+  const [noteType,     setNoteType]     = useState<'treatment' | 'general'>('treatment');
+  const [noteDate,     setNoteDate]     = useState(todayISO);
+  const [noteTitle,    setNoteTitle]    = useState('');
+  const [noteText,     setNoteText]     = useState('');
+  const [deleteState,  setDeleteState]  = useState<DeleteState>('idle');
 
   const licFileRef = useRef<HTMLInputElement>(null);
   const insFileRef = useRef<HTMLInputElement>(null);
@@ -32,9 +42,23 @@ export default function VehicleDetailPage() {
     );
   }
 
-  const handleConfirmedDelete = () => {
-    deleteVehicle(vehicle.id);
+  const isArchived = Boolean(vehicle.archived);
+
+  const handleArchive = () => {
+    archiveVehicle(vehicle.id);
     navigate('/renewals');
+  };
+
+  const handleRestore = () => {
+    restoreVehicle(vehicle.id);
+    navigate('/renewals');
+  };
+
+  const handleConfirmedDelete = () => {
+    // remember pre-delete archived state so we know where to land after
+    const wasArchived = isArchived;
+    deleteVehicle(vehicle.id);
+    navigate(wasArchived ? '/archive' : '/renewals');
   };
 
   const handleAddNote = () => {
@@ -44,8 +68,6 @@ export default function VehicleDetailPage() {
       date:        noteDate,
       description: noteText.trim(),
       type:        noteType,
-      // only persist a title for treatments AND when it's non-empty,
-      // so general notes and old data shape stay the same
       ...(noteType === 'treatment' && trimmedTitle ? { title: trimmedTitle } : {}),
     });
     setNoteTitle('');
@@ -76,26 +98,49 @@ export default function VehicleDetailPage() {
   const ls = getExpiryStatus(vehicle.licenseExpiryDate);
   const is = getExpiryStatus(vehicle.insuranceExpiryDate);
 
+  const archivedDateLabel = vehicle.archivedAt
+    ? formatDate(vehicle.archivedAt.slice(0, 10))
+    : '—';
+
   return (
     <>
       <div className="topbar">
         <div className="topbar-start">
           {/* RTL: → points toward start (right side) = "go back" */}
-          <button className="back-btn" onClick={() => navigate('/renewals')} aria-label="חזרה לרשימה">→</button>
+          <button
+            className="back-btn"
+            onClick={() => navigate(isArchived ? '/archive' : '/renewals')}
+            aria-label="חזרה לרשימה"
+          >
+            →
+          </button>
           <img src="/app-logo.png" alt="" className="topbar-logo" aria-hidden="true" />
           <span className="topbar-title">{vehicle.driverName}</span>
         </div>
         <div className="topbar-end">
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={() => navigate(`/vehicle/${vehicle.id}/edit`)}
-          >
-            ✏️ עריכה
-          </button>
+          {/* edit hidden for archived — archived vehicles are read-only */}
+          {!isArchived && (
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={() => navigate(`/vehicle/${vehicle.id}/edit`)}
+            >
+              ✏️ עריכה
+            </button>
+          )}
         </div>
       </div>
 
       <div className="content">
+        {isArchived && (
+          <div className="archived-banner" role="status">
+            <span className="archived-banner-icon" aria-hidden="true">🗄️</span>
+            <div className="archived-banner-body">
+              <div className="archived-banner-title">רכב זה נמצא בארכיון</div>
+              <div className="archived-banner-subtitle">תאריך ארכוב: {archivedDateLabel} · במצב קריאה בלבד</div>
+            </div>
+          </div>
+        )}
+
         {/* ── Vehicle Info ── */}
         <div className="card">
           <div className="section-title">🚗 פרטי הרכב</div>
@@ -132,7 +177,9 @@ export default function VehicleDetailPage() {
                   {vehicle.licenseExpiryDate ? formatDate(vehicle.licenseExpiryDate) : 'לא צוין'}
                 </div>
               </div>
-              <StatusBadge status={ls} dateStr={vehicle.licenseExpiryDate} />
+              {/* status badge intentionally suppressed for archived — alerts
+                  shouldn't draw attention to expiries that no longer matter */}
+              {!isArchived && <StatusBadge status={ls} dateStr={vehicle.licenseExpiryDate} />}
             </div>
           </div>
 
@@ -144,7 +191,7 @@ export default function VehicleDetailPage() {
                   {vehicle.insuranceExpiryDate ? formatDate(vehicle.insuranceExpiryDate) : 'לא צוין'}
                 </div>
               </div>
-              <StatusBadge status={is} dateStr={vehicle.insuranceExpiryDate} />
+              {!isArchived && <StatusBadge status={is} dateStr={vehicle.insuranceExpiryDate} />}
             </div>
           </div>
         </div>
@@ -156,59 +203,67 @@ export default function VehicleDetailPage() {
           <DocSlot
             label="רישיון רכב"
             doc={licenseDoc}
+            readOnly={isArchived}
             onUploadClick={() => licFileRef.current?.click()}
             onDelete={() => licenseDoc && deleteDocument(vehicle.id, licenseDoc.id)}
           />
-          <input
-            ref={licFileRef}
-            type="file"
-            accept="image/*,application/pdf"
-            style={{ display: 'none' }}
-            onChange={e => {
-              const f = e.target.files?.[0];
-              if (f) handleFileUpload('license', f);
-              e.target.value = '';
-            }}
-          />
+          {!isArchived && (
+            <input
+              ref={licFileRef}
+              type="file"
+              accept="image/*,application/pdf"
+              style={{ display: 'none' }}
+              onChange={e => {
+                const f = e.target.files?.[0];
+                if (f) handleFileUpload('license', f);
+                e.target.value = '';
+              }}
+            />
+          )}
 
           <div className="divider" />
 
           <DocSlot
             label="מסמך ביטוח"
             doc={insuranceDoc}
+            readOnly={isArchived}
             onUploadClick={() => insFileRef.current?.click()}
             onDelete={() => insuranceDoc && deleteDocument(vehicle.id, insuranceDoc.id)}
           />
-          <input
-            ref={insFileRef}
-            type="file"
-            accept="image/*,application/pdf"
-            style={{ display: 'none' }}
-            onChange={e => {
-              const f = e.target.files?.[0];
-              if (f) handleFileUpload('insurance', f);
-              e.target.value = '';
-            }}
-          />
+          {!isArchived && (
+            <input
+              ref={insFileRef}
+              type="file"
+              accept="image/*,application/pdf"
+              style={{ display: 'none' }}
+              onChange={e => {
+                const f = e.target.files?.[0];
+                if (f) handleFileUpload('insurance', f);
+                e.target.value = '';
+              }}
+            />
+          )}
         </div>
 
         {/* ── Notes & Treatments ── */}
         <div className="card">
           <div className="row-between" style={{ marginBottom: 12 }}>
             <div className="section-title" style={{ margin: 0 }}>📝 טיפולים ורשומות</div>
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={() => {
-                setShowNoteForm(f => !f);
-                setNoteText('');
-                setNoteTitle('');
-              }}
-            >
-              {showNoteForm ? 'ביטול' : '+ הוסף'}
-            </button>
+            {!isArchived && (
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => {
+                  setShowNoteForm(f => !f);
+                  setNoteText('');
+                  setNoteTitle('');
+                }}
+              >
+                {showNoteForm ? 'ביטול' : '+ הוסף'}
+              </button>
+            )}
           </div>
 
-          {showNoteForm && (
+          {showNoteForm && !isArchived && (
             <div className="add-note-box">
               <div className="note-type-toggle">
                 <button
@@ -277,7 +332,9 @@ export default function VehicleDetailPage() {
 
           {vehicle.notes.length === 0 && !showNoteForm && (
             <p style={{ color: 'var(--gray-400)', fontSize: '0.88rem', textAlign: 'center', padding: '14px 0' }}>
-              אין רשומות עדיין. לחץ &quot;+ הוסף&quot; כדי להוסיף טיפול או הערה.
+              {isArchived
+                ? 'אין רשומות. ברכב זה לא נשמרו טיפולים או הערות לפני העברה לארכיון.'
+                : 'אין רשומות עדיין. לחצו "+ הוסף" כדי להוסיף טיפול או הערה.'}
             </p>
           )}
 
@@ -287,6 +344,7 @@ export default function VehicleDetailPage() {
                 <NoteItem
                   key={note.id}
                   note={note}
+                  readOnly={isArchived}
                   onDelete={() => deleteNote(vehicle.id, note.id)}
                 />
               ))}
@@ -294,37 +352,71 @@ export default function VehicleDetailPage() {
           )}
         </div>
 
-        {/* ── Delete Vehicle ── */}
-        {!confirmDelete ? (
-          <button
-            className="btn btn-danger btn-full"
-            onClick={() => setConfirmDelete(true)}
-          >
-            🗑️ מחק רכב
-          </button>
-        ) : (
-          <div className="delete-confirm-box">
-            <p className="delete-confirm-text">
-              למחוק את הרכב של <strong>{vehicle.driverName}</strong>?<br />
-              כל הנתונים, הרשומות והמסמכים יימחקו לצמיתות.
-            </p>
-            <div className="delete-confirm-actions">
+        {/* ── Action area (depends on archived state + delete sub-state) ── */}
+        {isArchived ? (
+          deleteState === 'permanent' ? (
+            <PermanentConfirmBox
+              driverName={vehicle.driverName}
+              onCancel={() => setDeleteState('idle')}
+              onConfirm={handleConfirmedDelete}
+            />
+          ) : (
+            <div className="action-row">
               <button
-                className="btn btn-secondary"
+                className="btn btn-primary"
                 style={{ flex: 1 }}
-                onClick={() => setConfirmDelete(false)}
+                onClick={handleRestore}
               >
-                ביטול
+                ↺ שחזר לרכבים פעילים
               </button>
               <button
                 className="btn btn-danger"
                 style={{ flex: 1 }}
-                onClick={handleConfirmedDelete}
+                onClick={() => setDeleteState('permanent')}
               >
-                מחק לצמיתות
+                🗑️ מחק לצמיתות
+              </button>
+            </div>
+          )
+        ) : deleteState === 'idle' ? (
+          <button
+            className="btn btn-danger btn-full"
+            onClick={() => setDeleteState('choose')}
+          >
+            🗑️ מחק רכב
+          </button>
+        ) : deleteState === 'choose' ? (
+          <div className="delete-confirm-box">
+            <p className="delete-confirm-text">
+              מה ברצונכם לעשות עם הרכב של <strong>{vehicle.driverName}</strong>?
+            </p>
+            <div className="choose-actions">
+              <button
+                className="btn btn-primary"
+                onClick={handleArchive}
+              >
+                🗄️ העבר לארכיון
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={() => setDeleteState('permanent')}
+              >
+                🗑️ מחק לצמיתות
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setDeleteState('idle')}
+              >
+                ביטול
               </button>
             </div>
           </div>
+        ) : (
+          <PermanentConfirmBox
+            driverName={vehicle.driverName}
+            onCancel={() => setDeleteState('idle')}
+            onConfirm={handleConfirmedDelete}
+          />
         )}
       </div>
     </>
@@ -333,14 +425,43 @@ export default function VehicleDetailPage() {
 
 /* ── Sub-components ── */
 
+function PermanentConfirmBox({
+  driverName,
+  onCancel,
+  onConfirm,
+}: {
+  driverName: string;
+  onCancel:  () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="delete-confirm-box">
+      <p className="delete-confirm-text">
+        האם אתם בטוחים? פעולה זו לא ניתנת לשחזור.<br />
+        כל הנתונים של הרכב של <strong>{driverName}</strong> — רשומות, מסמכים והגדרות — יימחקו לצמיתות.
+      </p>
+      <div className="delete-confirm-actions">
+        <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onCancel}>
+          ביטול
+        </button>
+        <button className="btn btn-danger" style={{ flex: 1 }} onClick={onConfirm}>
+          מחק לצמיתות
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function DocSlot({
   label,
   doc,
+  readOnly,
   onUploadClick,
   onDelete,
 }: {
   label: string;
   doc: VehicleDocument | undefined;
+  readOnly: boolean;
   onUploadClick: () => void;
   onDelete: () => void;
 }) {
@@ -369,15 +490,19 @@ function DocSlot({
               </a>
             )}
           </div>
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={onDelete}
-            style={{ color: 'var(--red-500)', alignSelf: 'flex-start', flexShrink: 0 }}
-            aria-label="מחק מסמך"
-          >
-            🗑️
-          </button>
+          {!readOnly && (
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={onDelete}
+              style={{ color: 'var(--red-500)', alignSelf: 'flex-start', flexShrink: 0 }}
+              aria-label="מחק מסמך"
+            >
+              🗑️
+            </button>
+          )}
         </div>
+      ) : readOnly ? (
+        <div className="doc-empty-readonly">לא הועלה {label}</div>
       ) : (
         <div className="doc-upload-zone" onClick={onUploadClick} role="button" tabIndex={0}
           onKeyDown={e => e.key === 'Enter' && onUploadClick()}>
@@ -389,7 +514,15 @@ function DocSlot({
   );
 }
 
-function NoteItem({ note, onDelete }: { note: Note; onDelete: () => void }) {
+function NoteItem({
+  note,
+  readOnly,
+  onDelete,
+}: {
+  note: Note;
+  readOnly: boolean;
+  onDelete: () => void;
+}) {
   const title = note.title?.trim();
   return (
     <div className="note-item">
@@ -401,14 +534,16 @@ function NoteItem({ note, onDelete }: { note: Note; onDelete: () => void }) {
       </div>
       {title && <div className="note-title">{title}</div>}
       {note.description && <div className="note-text">{note.description}</div>}
-      <button
-        className="note-del-btn"
-        onClick={onDelete}
-        aria-label="מחק רשומה"
-        title="מחק"
-      >
-        ✕
-      </button>
+      {!readOnly && (
+        <button
+          className="note-del-btn"
+          onClick={onDelete}
+          aria-label="מחק רשומה"
+          title="מחק"
+        >
+          ✕
+        </button>
+      )}
     </div>
   );
 }

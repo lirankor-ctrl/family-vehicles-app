@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useVehicleStore } from '../store/VehicleContext';
 import { formatDate, getExpiryStatus, todayISO } from '../utils/dateUtils';
 import StatusBadge from '../components/StatusBadge';
-import { Note, VehicleDocument } from '../types';
+import VehicleSubscriptions from '../components/VehicleSubscriptions';
+import { Note, VehicleDocument, Subscription } from '../types';
 
 type DeleteState = 'idle' | 'choose' | 'permanent';
 
@@ -12,6 +13,7 @@ export default function VehicleDetailPage() {
   const { id }   = useParams<{ id: string }>();
   const {
     getVehicle,
+    updateVehicle,
     deleteVehicle,
     archiveVehicle,
     restoreVehicle,
@@ -93,6 +95,10 @@ export default function VehicleDetailPage() {
     reader.readAsDataURL(file);
   };
 
+  const handleSaveSubscriptions = (subs: Subscription[]) => {
+    updateVehicle(vehicle.id, { subscriptions: subs });
+  };
+
   const licenseDoc   = vehicle.documents.find(d => d.docType === 'license');
   const insuranceDoc = vehicle.documents.find(d => d.docType === 'insurance');
   const ls = getExpiryStatus(vehicle.licenseExpiryDate);
@@ -144,6 +150,12 @@ export default function VehicleDetailPage() {
         {/* ── Vehicle Info ── */}
         <div className="card">
           <div className="section-title">🚗 פרטי הרכב</div>
+
+          {vehicle.photo && (
+            <div className="vehicle-photo-detail">
+              <img src={vehicle.photo} alt={`צילום הרכב של ${vehicle.driverName}`} />
+            </div>
+          )}
 
           <div className="detail-field">
             <div className="detail-label">נהג במשפחה</div>
@@ -243,6 +255,21 @@ export default function VehicleDetailPage() {
               }}
             />
           )}
+        </div>
+
+        {/* ── Subscriptions / services ── */}
+        <div className="card">
+          <div className="section-title">🎫 מנויים ושירותים</div>
+          {!isArchived && (
+            <p className="subs-hint">
+              סמנו את המנויים הפעילים והוסיפו הערה במידת הצורך. רק מה שתסמנו או תכתבו יופיע בסיכומים ובייצוא.
+            </p>
+          )}
+          <VehicleSubscriptions
+            subscriptions={vehicle.subscriptions}
+            readOnly={isArchived}
+            onSave={handleSaveSubscriptions}
+          />
         </div>
 
         {/* ── Notes & Treatments ── */}

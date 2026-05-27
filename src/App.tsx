@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { VehicleProvider } from './store/VehicleContext';
 import { NotificationProvider } from './store/NotificationContext';
@@ -15,6 +16,11 @@ import ChecklistsPage from './pages/ChecklistsPage';
 import ChecklistFormPage from './pages/ChecklistFormPage';
 import ChecklistImportPage from './pages/ChecklistImportPage';
 import ChecklistDetailPage from './pages/ChecklistDetailPage';
+import LinksPage from './pages/LinksPage';
+
+// Lazy-loaded: pulls in jspdf + html2canvas only when the user opens export,
+// keeping them out of the initial bundle.
+const ExportPage = lazy(() => import('./pages/ExportPage'));
 
 export default function App() {
   return (
@@ -39,6 +45,15 @@ export default function App() {
                 <Route path="/checklists/new"       element={<ChecklistFormPage />} />
                 <Route path="/checklists/import"    element={<ChecklistImportPage />} />
                 <Route path="/checklists/:id"       element={<ChecklistDetailPage />} />
+                <Route path="/links"                element={<LinksPage />} />
+                <Route
+                  path="/export"
+                  element={
+                    <Suspense fallback={<div className="content" style={{ paddingTop: 48, textAlign: 'center', color: 'var(--purple-200)' }}>טוען…</div>}>
+                      <ExportPage />
+                    </Suspense>
+                  }
+                />
                 {/* anything unknown → landing (keeps old bookmarks alive) */}
                 <Route path="*"                     element={<Navigate to="/" replace />} />
               </Routes>

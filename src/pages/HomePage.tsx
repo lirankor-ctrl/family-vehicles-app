@@ -58,7 +58,9 @@ export default function HomePage() {
               >
                 <div className="vc-header">
                   <span className="vc-driver">{v.driverName}</span>
-                  <span className="vc-car-icon">🚗</span>
+                  {v.photo
+                    ? <img className="vc-thumb" src={v.photo} alt="" aria-hidden="true" />
+                    : <span className="vc-car-icon">🚗</span>}
                 </div>
 
                 {/* only render chips section when there's at least one chip */}

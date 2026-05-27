@@ -20,105 +20,86 @@ export default function LandingPage() {
     0,
   );
 
-  // open-items summary across all checklists
   const checklistOpenCount = checklists.reduce(
     (n, c) => n + c.items.filter(it => !it.completed).length,
     0,
   );
 
-  const checklistsSubtitle =
-    checklistCount === 0
-      ? 'נהלו רשימות אישיות לרכב, ביטוח, נסיעות ועוד'
-      : checklistOpenCount === 0
-        ? `${checklistCount} צ'ק ליסטים · הכל הושלם 🎉`
-        : `${checklistCount} צ'ק ליסטים · ${checklistOpenCount} פריטים פתוחים`;
-
   const renewalsSubtitle =
     activeCount === 0
-      ? 'הוסיפו רכבים ועקבו אחר תאריכי תפוגה'
+      ? 'רכבים, חידושים, מנויים, מסמכים והתראות'
       : alertCount > 0
         ? `${activeCount} רכבים · ${alertCount} התראות פעילות`
-        : `${activeCount} רכבים`;
+        : `${activeCount} רכבים · הכל בתוקף`;
 
   const treatmentsSubtitle =
-    treatmentCount === 0
-      ? 'תיעוד טיפולים והיסטוריית שירות'
-      : treatmentCount === 1
-        ? 'טיפול אחד בארכיון'
-        : `${treatmentCount} טיפולים בארכיון`;
+    treatmentCount === 0 ? 'היסטוריית שירות' : `${treatmentCount} טיפולים`;
+
+  const checklistsSubtitle =
+    checklistCount === 0
+      ? 'רשימות אישיות'
+      : checklistOpenCount === 0
+        ? 'הכל הושלם 🎉'
+        : `${checklistOpenCount} פתוחים`;
 
   return (
     <div className="content landing-content">
       <div className="landing-hero">
-        <img
-          src="/app-logo.png"
-          alt="קצין רכב"
-          className="landing-logo"
-        />
+        <img src="/app-logo.png" alt="קצין רכב" className="landing-logo" />
         <h1 className="landing-title">קצין רכב</h1>
         <p className="landing-tagline">ניהול חכם של רכבי המשפחה</p>
       </div>
 
-      <div className="landing-cards">
+      <div className="dash">
+        {/* ── Primary (largest) ── */}
         <button
-          className="landing-card"
+          className="dash-primary"
           onClick={() => navigate('/renewals')}
-          aria-label="חידושי ביטוח ורישיון"
+          aria-label="חידושים ומנויים"
         >
-          <span className="landing-card-icon" aria-hidden="true">📋</span>
-          <div className="landing-card-body">
-            <span className="landing-card-title">חידושי ביטוח / רישיון</span>
-            <span className="landing-card-subtitle">{renewalsSubtitle}</span>
+          <span className="dash-primary-icon" aria-hidden="true">🚗</span>
+          <div className="dash-primary-body">
+            <span className="dash-primary-title">חידושים / מנויים</span>
+            <span className="dash-primary-subtitle">{renewalsSubtitle}</span>
           </div>
           {alertCount > 0 && (
-            <span className="landing-card-badge" aria-hidden="true">{alertCount}</span>
+            <span className="dash-badge" aria-hidden="true">{alertCount}</span>
           )}
-          <span className="landing-card-arrow" aria-hidden="true">‹</span>
         </button>
 
-        <button
-          className="landing-card"
-          onClick={() => navigate('/treatments')}
-          aria-label="טיפולים"
-        >
-          <span className="landing-card-icon" aria-hidden="true">🔧</span>
-          <div className="landing-card-body">
-            <span className="landing-card-title">טיפולים</span>
-            <span className="landing-card-subtitle">{treatmentsSubtitle}</span>
-          </div>
-          <span className="landing-card-arrow" aria-hidden="true">‹</span>
-        </button>
+        {/* ── Medium row ── */}
+        <div className="dash-row">
+          <button className="dash-medium" onClick={() => navigate('/treatments')} aria-label="טיפולים">
+            <span className="dash-medium-icon" aria-hidden="true">🔧</span>
+            <span className="dash-medium-title">טיפולים</span>
+            <span className="dash-medium-subtitle">{treatmentsSubtitle}</span>
+          </button>
 
-        <button
-          className="landing-card"
-          onClick={() => navigate('/checklists')}
-          aria-label="צ'ק ליסט"
-        >
-          <span className="landing-card-icon" aria-hidden="true">📋</span>
-          <div className="landing-card-body">
-            <span className="landing-card-title">צ'ק ליסט</span>
-            <span className="landing-card-subtitle">{checklistsSubtitle}</span>
-          </div>
-          <span className="landing-card-arrow" aria-hidden="true">‹</span>
-        </button>
+          <button className="dash-medium" onClick={() => navigate('/checklists')} aria-label="צ'ק ליסט">
+            <span className="dash-medium-icon" aria-hidden="true">📋</span>
+            <span className="dash-medium-title">צ'ק ליסט</span>
+            <span className="dash-medium-subtitle">{checklistsSubtitle}</span>
+          </button>
+        </div>
 
-        <button
-          className="landing-card landing-card-secondary"
-          onClick={() => navigate('/archive')}
-          aria-label="ארכיון רכבים"
-        >
-          <span className="landing-card-icon landing-card-icon-secondary" aria-hidden="true">🗄️</span>
-          <div className="landing-card-body">
-            <span className="landing-card-title">ארכיון</span>
-            <span className="landing-card-subtitle">
-              {archivedCount === 0
-                ? 'רכבים שיועברו לארכיון יישמרו כאן'
-                : archivedCount === 1
-                  ? 'רכב אחד בארכיון'
-                  : `${archivedCount} רכבים בארכיון`}
-            </span>
-          </div>
-          <span className="landing-card-arrow" aria-hidden="true">‹</span>
+        {/* ── Small row ── */}
+        <div className="dash-row">
+          <button className="dash-small" onClick={() => navigate('/archive')} aria-label="ארכיון">
+            <span className="dash-small-icon" aria-hidden="true">🗄️</span>
+            <span className="dash-small-title">ארכיון</span>
+            {archivedCount > 0 && <span className="dash-small-count">{archivedCount}</span>}
+          </button>
+
+          <button className="dash-small" onClick={() => navigate('/links')} aria-label="קישורים">
+            <span className="dash-small-icon" aria-hidden="true">🔗</span>
+            <span className="dash-small-title">קישורים</span>
+          </button>
+        </div>
+
+        {/* ── Backup / export footer action ── */}
+        <button className="dash-export" onClick={() => navigate('/export')} aria-label="גיבוי וייצוא PDF">
+          <span aria-hidden="true">📄</span>
+          <span>גיבוי וייצוא PDF</span>
         </button>
       </div>
     </div>

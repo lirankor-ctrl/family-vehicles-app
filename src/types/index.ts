@@ -18,6 +18,17 @@ export interface VehicleDocument {
   uploadedAt: string;
 }
 
+/** Stable keys for the four supported vehicle subscriptions/services. */
+export type SubscriptionKey = 'pango' | 'kvish6' | 'carmel' | 'fastlane';
+
+export interface Subscription {
+  key: SubscriptionKey;
+  /** Whether the subscription is active for this vehicle. */
+  active: boolean;
+  /** Free-text note (e.g. "דרך העבודה"). */
+  notes?: string;
+}
+
 export interface ChecklistItem {
   id: string;
   title: string;
@@ -52,4 +63,10 @@ export interface Vehicle {
   archived?: boolean;
   /** ISO date when the vehicle was archived. Cleared on restore. */
   archivedAt?: string;
+  /** Vehicle photo as a (resized) base64 data URL — added in v1.3.
+   *  Missing on old persisted vehicles → fall back to the default illustration. */
+  photo?: string;
+  /** Subscriptions/services for this vehicle — added in v1.3.
+   *  Only items the user actually filled in (active OR with notes) are shown. */
+  subscriptions?: Subscription[];
 }

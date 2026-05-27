@@ -23,7 +23,7 @@ function persist(vehicles: Vehicle[]): void {
 
 type VehicleInput = Pick<
   Vehicle,
-  'driverName' | 'vehicleType' | 'licensePlate' | 'licenseExpiryDate' | 'insuranceExpiryDate'
+  'driverName' | 'vehicleType' | 'licensePlate' | 'licenseExpiryDate' | 'insuranceExpiryDate' | 'photo'
 >;
 
 export function useVehicles() {

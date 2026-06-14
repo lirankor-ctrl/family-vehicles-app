@@ -123,10 +123,16 @@ function documentsHtml(v: Vehicle): string {
   const items = v.documents
     .map(d => {
       const label = d.docType === 'license' ? 'רישיון רכב' : 'מסמך ביטוח';
-      const thumb = d.mimeType.startsWith('image/')
-        ? `<div><img src="${d.fileData}" style="max-width:160px;max-height:120px;border-radius:8px;border:1px solid #E5E7EB;margin-top:4px;" /></div>`
-        : '';
-      return `<li style="margin:3px 0;font-size:12.5px;color:${INK};">📎 ${esc(label)}: <span style="color:${MUTED};">${esc(d.fileName)}</span>${thumb}</li>`;
+      let extra: string;
+      if (!d.fileData) {
+        extra = ` <span style="color:${MUTED};">(ללא תצוגה מקדימה)</span>`;
+      } else if (d.mimeType.startsWith('image/')) {
+        extra = `<div><img src="${d.fileData}" style="max-width:160px;max-height:120px;border-radius:8px;border:1px solid #E5E7EB;margin-top:4px;" /></div>`;
+      } else {
+        // PDFs can't be rasterised by html2canvas — list the name + a note.
+        extra = ` <span style="color:${MUTED};">(PDF — לצפייה במסמך המלא יש לפתוח באפליקציה)</span>`;
+      }
+      return `<li style="margin:3px 0;font-size:12.5px;color:${INK};">📎 ${esc(label)}: <span style="color:${MUTED};">${esc(d.fileName)}</span>${extra}</li>`;
     })
     .join('');
   return `<div style="margin-top:8px;"><div style="font-size:12px;font-weight:700;color:${PURPLE};margin-bottom:2px;">📄 מסמכים</div><ul style="list-style:none;padding:0;margin:0;">${items}</ul></div>`;

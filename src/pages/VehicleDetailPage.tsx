@@ -479,6 +479,43 @@ function PermanentConfirmBox({
   );
 }
 
+/** Convert a base64 data URL into a Blob (more reliable than huge data URLs
+ *  when opening/downloading PDFs in a new tab). */
+function dataUrlToBlob(dataUrl: string): Blob {
+  const [meta, b64 = ''] = dataUrl.split(',');
+  const mime = meta.match(/:(.*?);/)?.[1] || 'application/octet-stream';
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+
+function openDoc(doc: VehicleDocument) {
+  try {
+    const url = URL.createObjectURL(dataUrlToBlob(doc.fileData));
+    window.open(url, '_blank', 'noopener');
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  } catch {
+    window.open(doc.fileData, '_blank');
+  }
+}
+
+function downloadDoc(doc: VehicleDocument) {
+  const a = document.createElement('a');
+  a.download = doc.fileName || 'document';
+  try {
+    const url = URL.createObjectURL(dataUrlToBlob(doc.fileData));
+    a.href = url;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2_000);
+  } catch {
+    a.href = doc.fileData;
+    a.click();
+  }
+}
+
 function DocSlot({
   label,
   doc,
@@ -492,40 +529,55 @@ function DocSlot({
   onUploadClick: () => void;
   onDelete: () => void;
 }) {
+  const hasData = Boolean(doc?.fileData);
+  const isImage = Boolean(doc?.mimeType?.startsWith('image/'));
+  const isPdf   = doc?.mimeType === 'application/pdf';
+
   return (
     <div>
       <div className="detail-label" style={{ marginBottom: 8 }}>{label}</div>
       {doc ? (
         <div className="doc-preview">
-          <span style={{ fontSize: '1.7rem', flexShrink: 0 }}>
-            {doc.mimeType.startsWith('image/') ? '🖼️' : '📄'}
-          </span>
-          <div className="doc-preview-info">
+          <div className="doc-preview-header">
+            <span className="doc-preview-icon">{isImage ? '🖼️' : '📄'}</span>
             <div className="doc-preview-name">{doc.fileName}</div>
-            {doc.mimeType.startsWith('image/') && (
-              <img src={doc.fileData} alt={label} />
-            )}
-            {doc.mimeType === 'application/pdf' && (
-              <a
-                href={doc.fileData}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-ghost btn-sm"
-                style={{ marginTop: 6, display: 'inline-flex' }}
+            {!readOnly && (
+              <button
+                className="doc-del-btn"
+                onClick={onDelete}
+                aria-label="מחק מסמך"
+                title="מחק מסמך"
               >
-                📂 פתח PDF
-              </a>
+                🗑️
+              </button>
             )}
           </div>
-          {!readOnly && (
-            <button
-              className="btn btn-ghost btn-sm"
-              onClick={onDelete}
-              style={{ color: 'var(--red-500)', alignSelf: 'flex-start', flexShrink: 0 }}
-              aria-label="מחק מסמך"
-            >
-              🗑️
-            </button>
+
+          {!hasData ? (
+            <div className="doc-no-preview">
+              המסמך נשמר בעבר ללא תצוגה מקדימה. יש להעלות אותו מחדש.
+            </div>
+          ) : (
+            <>
+              {isImage && (
+                <div className="doc-preview-media">
+                  <img src={doc.fileData} alt={label} />
+                </div>
+              )}
+              {isPdf && (
+                <div className="doc-preview-media doc-preview-pdf">
+                  <iframe src={doc.fileData} title={`תצוגה מקדימה — ${label}`} />
+                </div>
+              )}
+              <div className="doc-actions">
+                <button className="btn btn-secondary btn-sm" onClick={() => openDoc(doc)}>
+                  📂 פתח מסמך
+                </button>
+                <button className="btn btn-ghost btn-sm" onClick={() => downloadDoc(doc)}>
+                  ⬇️ הורד מסמך
+                </button>
+              </div>
+            </>
           )}
         </div>
       ) : readOnly ? (

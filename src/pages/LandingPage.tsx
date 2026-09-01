@@ -2,12 +2,20 @@ import { useNavigate } from 'react-router-dom';
 import { useVehicleStore } from '../store/VehicleContext';
 import { useNotifications } from '../store/NotificationContext';
 import { useChecklistStore } from '../store/ChecklistContext';
+import { useAccidentStore } from '../store/AccidentContext';
+import HoldToActivateButton from '../components/HoldToActivateButton';
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const { activeVehicles, archivedVehicles } = useVehicleStore();
   const { activeAlerts } = useNotifications();
   const { checklists } = useChecklistStore();
+  const { cases: accidentCases, createCase } = useAccidentStore();
+
+  const startAccident = () => {
+    const id = createCase();
+    navigate(`/accident/${id}`);
+  };
 
   const alertCount     = activeAlerts.length;
   const activeCount    = activeVehicles.length;
@@ -65,6 +73,15 @@ export default function LandingPage() {
           {alertCount > 0 && (
             <span className="dash-badge" aria-hidden="true">{alertCount}</span>
           )}
+        </button>
+
+        {/* ── Emergency: hold-to-activate accident mode ── */}
+        <HoldToActivateButton onActivate={startAccident} />
+
+        <button className="dash-small dash-small-full" onClick={() => navigate('/accidents')} aria-label="תאונות">
+          <span className="dash-small-icon" aria-hidden="true">📁</span>
+          <span className="dash-small-title">תאונות</span>
+          {accidentCases.length > 0 && <span className="dash-small-count">{accidentCases.length}</span>}
         </button>
 
         {/* ── Medium row ── */}

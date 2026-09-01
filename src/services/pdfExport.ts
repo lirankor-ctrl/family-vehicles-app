@@ -21,14 +21,14 @@ const MUTED = '#6B7280';
 // Helpers
 // ──────────────────────────────────────────────────────────────────────────
 
-function esc(s: unknown): string {
+export function esc(s: unknown): string {
   return String(s ?? '').replace(/[&<>"]/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string),
   );
 }
 
 /** Fetch a same-origin asset and inline it as a data URL (so html2canvas captures it). */
-async function toDataUrl(url: string): Promise<string | null> {
+export async function toDataUrl(url: string): Promise<string | null> {
   try {
     const res = await fetch(url);
     const blob = await res.blob();
@@ -43,7 +43,7 @@ async function toDataUrl(url: string): Promise<string | null> {
   }
 }
 
-function waitForImages(el: HTMLElement): Promise<unknown> {
+export function waitForImages(el: HTMLElement): Promise<unknown> {
   const imgs = Array.from(el.querySelectorAll('img'));
   return Promise.all(
     imgs.map(img =>
@@ -58,7 +58,7 @@ function waitForImages(el: HTMLElement): Promise<unknown> {
 }
 
 /** A coloured status pill for an expiry date, or '' when no date. */
-function dateStatus(dateStr?: string): string {
+export function dateStatus(dateStr?: string): string {
   const days = getDaysUntil(dateStr);
   if (days === null) return '';
   let color = '#16A34A';
@@ -71,7 +71,7 @@ function dateStatus(dateStr?: string): string {
 }
 
 /** One labelled detail row; returns '' when the value is empty. */
-function row(label: string, value?: string, extra = ''): string {
+export function row(label: string, value?: string, extra = ''): string {
   if (!value && !extra) return '';
   return `<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid #F3F4F6;font-size:13px;">
     <span style="color:${MUTED};">${esc(label)}</span>
@@ -79,9 +79,13 @@ function row(label: string, value?: string, extra = ''): string {
   </div>`;
 }
 
-function sectionTitle(text: string): string {
+export function sectionTitle(text: string): string {
   return `<div style="font-size:15px;font-weight:800;color:${PURPLE_DARK};margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid ${PURPLE_LIGHT};">${esc(text)}</div>`;
 }
+
+// Shared brand tokens, exported so sibling report builders (e.g. the accident
+// report) stay visually identical without redefining the palette.
+export const PDF_COLORS = { PURPLE, PURPLE_DARK, PURPLE_LIGHT, INK, MUTED };
 
 // ──────────────────────────────────────────────────────────────────────────
 // Per-vehicle block
@@ -282,14 +286,17 @@ async function buildReportElement(data: ReportData): Promise<HTMLElement> {
   return el;
 }
 
-/** Render the report to a multi-page A4 PDF and return it as a Blob. */
-export async function generatePdfBlob(data: ReportData): Promise<Blob> {
-  const el = await buildReportElement(data);
+/**
+ * Rasterize an (already-mounted, off-screen) report element and paginate it
+ * into a multi-page A4 PDF. Shared by every report builder in the app —
+ * removes the element from the DOM when done, success or failure.
+ */
+export async function canvasToMultiPagePdf(el: HTMLElement, backgroundColor = '#F3F4F6'): Promise<Blob> {
   try {
     const canvas = await html2canvas(el, {
       scale: 2,
       useCORS: true,
-      backgroundColor: '#F3F4F6',
+      backgroundColor,
       logging: false,
     });
 
@@ -316,6 +323,12 @@ export async function generatePdfBlob(data: ReportData): Promise<Blob> {
   }
 }
 
+/** Render the report to a multi-page A4 PDF and return it as a Blob. */
+export async function generatePdfBlob(data: ReportData): Promise<Blob> {
+  const el = await buildReportElement(data);
+  return canvasToMultiPagePdf(el, '#F3F4F6');
+}
+
 /** Suggested ASCII filename (Hebrew filenames break some download flows). */
 export function reportFileName(): string {
   return `kzin-rechev-backup-${new Date().toISOString().slice(0, 10)}.pdf`;
@@ -339,7 +352,15 @@ export type EmailResult = 'shared' | 'cancelled' | 'download-mailto';
  * API to attach the file directly to an email/WhatsApp. Otherwise downloads the
  * PDF and opens the default mail client with a pre-filled message.
  */
-export async function emailPdf(blob: Blob, filename: string): Promise<EmailResult> {
+export async function emailPdf(
+  blob: Blob,
+  filename: string,
+  opts?: { title?: string; text?: string; mailtoNote?: string },
+): Promise<EmailResult> {
+  const title = opts?.title ?? 'קצין רכב — גיבוי נתונים';
+  const text = opts?.text ?? 'מצורף קובץ גיבוי הנתונים מאפליקציית קצין רכב.';
+  const mailtoNote = opts?.mailtoNote ?? 'מצורף קובץ הגיבוי מאפליקציית קצין רכב.';
+
   const file = new File([blob], filename, { type: 'application/pdf' });
   const nav = navigator as Navigator & {
     canShare?: (d: { files: File[] }) => boolean;
@@ -348,11 +369,7 @@ export async function emailPdf(blob: Blob, filename: string): Promise<EmailResul
 
   if (nav.canShare && nav.share && nav.canShare({ files: [file] })) {
     try {
-      await nav.share({
-        files: [file],
-        title: 'קצין רכב — גיבוי נתונים',
-        text: 'מצורף קובץ גיבוי הנתונים מאפליקציית קצין רכב.',
-      });
+      await nav.share({ files: [file], title, text });
       return 'shared';
     } catch (e) {
       if ((e as DOMException)?.name === 'AbortError') return 'cancelled';
@@ -361,10 +378,9 @@ export async function emailPdf(blob: Blob, filename: string): Promise<EmailResul
   }
 
   downloadBlob(blob, filename);
-  const subject = encodeURIComponent('קצין רכב — גיבוי נתונים');
+  const subject = encodeURIComponent(title);
   const body = encodeURIComponent(
-    'מצורף קובץ הגיבוי מאפליקציית קצין רכב.\n\n' +
-      'הקובץ הורד למכשיר — יש לצרף אותו ידנית להודעה זו לפני השליחה.',
+    `${mailtoNote}\n\n` + 'הקובץ הורד למכשיר — יש לצרף אותו ידנית להודעה זו לפני השליחה.',
   );
   window.location.href = `mailto:?subject=${subject}&body=${body}`;
   return 'download-mailto';

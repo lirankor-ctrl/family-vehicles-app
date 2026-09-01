@@ -6,10 +6,11 @@ export default function Navigation() {
   const { pathname } = useLocation();
   const { activeAlerts } = useNotifications();
 
-  // hide nav on: landing page and form screens
-  const isLanding = pathname === '/';
-  const isForm    = pathname === '/vehicle/new' || pathname.endsWith('/edit');
-  if (isLanding || isForm) return null;
+  // hide nav on: landing page, form screens, and the full-screen accident wizard
+  const isLanding  = pathname === '/';
+  const isForm     = pathname === '/vehicle/new' || pathname.endsWith('/edit');
+  const isAccident = pathname.startsWith('/accident/');
+  if (isLanding || isForm || isAccident) return null;
 
   const alertCount = activeAlerts.length;
 

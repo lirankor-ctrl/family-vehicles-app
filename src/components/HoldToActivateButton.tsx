@@ -10,6 +10,7 @@ export default function HoldToActivateButton({ onActivate }: { onActivate: () =>
       type="button"
       className={`dash-alert ${holding ? 'holding' : ''}`}
       {...handlers}
+      onContextMenu={e => e.preventDefault()}
       aria-label="החזיקו לחוצים 3 שניות כדי לפתוח מצב תאונה"
     >
       <span className="dash-alert-icon" aria-hidden="true">🚨</span>

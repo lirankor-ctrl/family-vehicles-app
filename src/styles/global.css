@@ -2029,6 +2029,7 @@ button, a, [role="button"], input, textarea, select, label {
   -webkit-user-select: none;
   user-select: none;
   touch-action: none; /* let the hold gesture own pointer tracking, no scroll interference */
+  -webkit-touch-callout: none; /* iOS: suppress the long-press callout/selection UI, which can cancel the pointer mid-hold */
 }
 
 .dash-alert.holding { transform: scale(1.015); box-shadow: 0 10px 30px rgba(220, 38, 38, 0.55); }

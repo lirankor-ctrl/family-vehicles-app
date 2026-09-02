@@ -10,7 +10,7 @@ export default function AccidentsPage() {
     <>
       <div className="topbar">
         <div className="topbar-start">
-          <button className="back-btn" onClick={() => navigate('/')} aria-label="חזרה למסך פתיחה">→</button>
+          <button className="back-btn" onClick={() => navigate('/archive')} aria-label="חזרה לארכיון">→</button>
           <img src="/app-logo.png" alt="" className="topbar-logo" aria-hidden="true" />
           <span className="topbar-title">🚨 תאונות</span>
         </div>

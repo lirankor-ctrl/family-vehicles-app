@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { useVehicleStore } from '../store/VehicleContext';
+import { useAccidentStore } from '../store/AccidentContext';
 import { formatDate } from '../utils/dateUtils';
 
 export default function ArchivePage() {
   const navigate = useNavigate();
   const { archivedVehicles } = useVehicleStore();
+  const { cases: accidentCases } = useAccidentStore();
 
   // newest archive first
   const sorted = [...archivedVehicles].sort((a, b) =>
@@ -35,6 +37,19 @@ export default function ArchivePage() {
       </div>
 
       <div className="content">
+        <button className="archive-accidents-card" onClick={() => navigate('/accidents')} aria-label="תאונות">
+          <span className="archive-accidents-icon" aria-hidden="true">🚨</span>
+          <div className="archive-accidents-body">
+            <span className="archive-accidents-title">תאונות</span>
+            <span className="archive-accidents-subtitle">
+              {accidentCases.length > 0 ? `${accidentCases.length} תיקי תאונה` : 'היסטוריית תאונות'}
+            </span>
+          </div>
+          <span className="archive-accidents-arrow" aria-hidden="true">‹</span>
+        </button>
+
+        {sorted.length > 0 && <div className="section-title">🚗 רכבים בארכיון</div>}
+
         {sorted.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">🗄️</div>

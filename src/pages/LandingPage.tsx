@@ -10,7 +10,7 @@ export default function LandingPage() {
   const { activeVehicles, archivedVehicles } = useVehicleStore();
   const { activeAlerts } = useNotifications();
   const { checklists } = useChecklistStore();
-  const { cases: accidentCases, createCase } = useAccidentStore();
+  const { createCase } = useAccidentStore();
 
   const startAccident = () => {
     const id = createCase();
@@ -75,15 +75,6 @@ export default function LandingPage() {
           )}
         </button>
 
-        {/* ── Emergency: hold-to-activate accident mode ── */}
-        <HoldToActivateButton onActivate={startAccident} />
-
-        <button className="dash-small dash-small-full" onClick={() => navigate('/accidents')} aria-label="תאונות">
-          <span className="dash-small-icon" aria-hidden="true">📁</span>
-          <span className="dash-small-title">תאונות</span>
-          {accidentCases.length > 0 && <span className="dash-small-count">{accidentCases.length}</span>}
-        </button>
-
         {/* ── Medium row ── */}
         <div className="dash-row">
           <button className="dash-medium" onClick={() => navigate('/treatments')} aria-label="טיפולים">
@@ -118,6 +109,11 @@ export default function LandingPage() {
           <span aria-hidden="true">📄</span>
           <span>גיבוי וייצוא PDF</span>
         </button>
+
+        {/* ── Emergency: hold-to-activate accident mode, visually separated at the bottom ── */}
+        <div className="dash-emergency-zone">
+          <HoldToActivateButton onActivate={startAccident} />
+        </div>
       </div>
     </div>
   );

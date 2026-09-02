@@ -2071,8 +2071,14 @@ button, a, [role="button"], input, textarea, select, label {
   transition: stroke-dashoffset 0.05s linear;
 }
 
-/* full-width variant of .dash-small, used for the "תאונות" entry */
-.dash-small-full { width: 100%; }
+/* wraps the emergency button at the bottom of the dashboard — a subtle
+   divider + extra spacing keeps it clearly separate from the regular
+   purple management actions above it */
+.dash-emergency-zone {
+  margin-top: 6px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
 
 /* ─── Accident mode: wizard shell ─── */
 .accident-shell {
@@ -2410,6 +2416,50 @@ button, a, [role="button"], input, textarea, select, label {
 }
 
 .accident-summary-step-btn:last-child { border-bottom: none; }
+
+/* Entry point into accident history from within the Archive page — warm
+   accent (matches the emergency button's color language) so it reads as
+   distinct from the purple vehicle-archive cards below it, without turning
+   the rest of the archive red/orange. */
+.archive-accidents-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: start;
+  background: var(--white);
+  border: none;
+  border-inline-start: 4px solid var(--orange-500);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  font-family: var(--font);
+  min-height: 76px;
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+
+.archive-accidents-card:hover  { transform: translateY(-2px); box-shadow: var(--shadow); }
+.archive-accidents-card:active { transform: translateY(0); }
+
+.archive-accidents-icon {
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--red-600), var(--orange-500));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 3px 12px rgba(220, 38, 38, 0.28);
+}
+
+.archive-accidents-body { flex: 1; min-width: 0; }
+.archive-accidents-title { font-size: 1.04rem; font-weight: 700; color: var(--gray-900); margin-bottom: 2px; }
+.archive-accidents-subtitle { font-size: 0.8rem; color: var(--gray-500); }
+.archive-accidents-arrow { flex-shrink: 0; color: var(--gray-300); font-size: 1.5rem; font-weight: 700; line-height: 1; }
 
 /* Accidents list page */
 .accidents-list { display: flex; flex-direction: column; gap: 12px; }
